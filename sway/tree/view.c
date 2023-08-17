@@ -1320,6 +1320,10 @@ void view_update_title(struct sway_view *view, bool force) {
 
 	view->container->title = title ? strdup(title) : NULL;
 
+	// BEGIN jrozek update-container-on-title-change
+	container_update_representation(view->container);
+	// END jrozek update-container-on-title-change
+
 	// Update title after the global font height is updated
 	container_update_title_textures(view->container);
 

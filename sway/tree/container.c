@@ -627,20 +627,49 @@ size_t container_build_representation(enum sway_container_layout layout,
 		}
 		struct sway_container *child = children->items[i];
 		const char *identifier = NULL;
+		bool custom_title = false;
 		if (child->view) {
 			identifier = view_get_class(child->view);
 			if (!identifier) {
 				identifier = view_get_app_id(child->view);
 			}
+			if(lenient_strcmp(identifier, "Code") == 0) {
+				const char *title = view_get_title(child->view);
+				if(title) {
+					const char *first_offset = strstr(title, " - ");
+					if(first_offset != NULL) {
+						first_offset += 3;
+						const char *project_name_offset;
+						if(strstr(first_offset, " - ") != NULL) {
+							project_name_offset = first_offset;
+						} else {
+							project_name_offset = title;
+						}
+						const char *end_offset = strstr(project_name_offset, " - Visual Studio Code");
+						if(end_offset != NULL) {
+							custom_title = true;
+							size_t project_name_length = end_offset - project_name_offset;
+							lenient_strcat(buffer, "(");
+							lenient_strncat(buffer, project_name_offset, project_name_length);
+							lenient_strcat(buffer, ")");
+							len += 2 + project_name_length;
+						}
+					}
+				}
+			} else if(lenient_strcmp(identifier, "xfce4-terminal") == 0) {
+				identifier = "term";
+			}
 		} else {
 			identifier = child->formatted_title;
 		}
-		if (identifier) {
-			len += strlen(identifier);
-			lenient_strcat(buffer, identifier);
-		} else {
-			len += 6;
-			lenient_strcat(buffer, "(null)");
+		if(!custom_title) {
+			if (identifier) {
+				len += strlen(identifier);
+				lenient_strcat(buffer, identifier);
+			} else {
+				len += 6;
+				lenient_strcat(buffer, "(null)");
+			}
 		}
 	}
 	++len;
